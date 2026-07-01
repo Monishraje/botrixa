@@ -39,7 +39,7 @@ export async function getProjectsAction(
 
     const data = await ProjectService.getProjects(session.user.id, params);
     return { success: true, data };
-  } catch (error: unknown) {
+  } catch {
     return { success: false, error: "Failed to fetch projects" };
   }
 }
@@ -73,7 +73,7 @@ export async function deleteProjectAction(id: string): Promise<ApiResponse<boole
     await ProjectService.softDeleteProject(session.user.id, id);
     revalidatePath("/projects");
     return { success: true, data: true, message: "Project deleted successfully" };
-  } catch (error: unknown) {
+  } catch {
     return { success: false, error: "Failed to delete project" };
   }
 }
