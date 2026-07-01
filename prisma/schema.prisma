@@ -23,6 +23,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
+  projects      Project[]
 }
 
 model Account {
@@ -58,4 +59,145 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// -----------------------------------------------------------------------------
+// ENUMS
+// -----------------------------------------------------------------------------
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum BotStatus {
+  DRAFT
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+  DELETED
+}
+
+enum BotTemplate {
+  MODERATION
+  WELCOME
+  MUSIC
+  TICKET
+  ECONOMY
+  LOGGING
+  REACTION_ROLES
+  LEVELING
+  CUSTOM
+}
+
+enum BotLanguage {
+  ENGLISH
+  SPANISH
+  FRENCH
+  GERMAN
+  CUSTOM
+}
+
+enum DeploymentProvider {
+  RAILWAY
+  DOCKER
+  HOSTED
+}
+
+enum DeploymentStatus {
+  PENDING
+  DEPLOYING
+  RUNNING
+  FAILED
+  STOPPED
+}
+
+// -----------------------------------------------------------------------------
+// MODELS
+// -----------------------------------------------------------------------------
+
+model Project {
+  id          String        @id @default(cuid())
+  userId      String
+  slug        String        @unique
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bots        Bot[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([slug])
+  @@index([deletedAt])
+}
+
+model Bot {
+  id             String      @id @default(cuid())
+  projectId      String
+  slug           String      @unique
+  name           String
+  description    String?
+  template       BotTemplate @default(CUSTOM)
+  language       BotLanguage @default(ENGLISH)
+  prefix         String      @default("!")
+  avatar         String?
+  status         BotStatus   @default(DRAFT)
+  
+  // Future AI fields
+  prompt         String?     @db.Text
+  systemPrompt   String?     @db.Text
+  version        Int         @default(1)
+  lastGeneratedAt DateTime?
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
+
+  project        Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  envVars        BotEnvironmentVariable[]
+  deployments    BotDeployment[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@index([slug])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model BotEnvironmentVariable {
+  id        String   @id @default(cuid())
+  botId     String
+  key       String
+  value     String   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@index([botId])
+  @@unique([botId, key])
+}
+
+model BotDeployment {
+  id         String             @id @default(cuid())
+  botId      String
+  provider   DeploymentProvider
+  status     DeploymentStatus   @default(PENDING)
+  deployedAt DateTime?
+  
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  bot        Bot                @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@index([botId])
+  @@index([status])
 }
