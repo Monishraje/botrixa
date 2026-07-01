@@ -38,7 +38,13 @@ export class BotService {
 
   static async getBots(
     userId: string,
-    params: { page?: number; limit?: number; search?: string; sort?: "asc" | "desc"; projectId?: string }
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      sort?: "asc" | "desc";
+      projectId?: string;
+    }
   ) {
     const page = params.page || 1;
     const limit = params.limit || 10;
@@ -84,6 +90,7 @@ export class BotService {
         project: true,
         envVars: true,
         deployments: { orderBy: { createdAt: "desc" }, take: 5 },
+        versions: { orderBy: { version: "desc" }, take: 5 },
       },
     });
   }
@@ -91,7 +98,13 @@ export class BotService {
   static async updateBot(
     userId: string,
     id: string,
-    data: { name?: string; description?: string | null; prefix?: string; language?: BotLanguage; template?: BotTemplate }
+    data: {
+      name?: string;
+      description?: string | null;
+      prefix?: string;
+      language?: BotLanguage;
+      template?: BotTemplate;
+    }
   ) {
     const bot = await prisma.bot.findFirst({
       where: { id, project: { userId }, deletedAt: null },

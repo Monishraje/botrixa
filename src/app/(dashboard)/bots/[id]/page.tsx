@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { BotService } from "@/features/bots/services/bot.service";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
-import { ArrowLeft, Settings, Database, Activity, Code } from "lucide-react";
+import { ArrowLeft, Settings, Database, Activity, Code, Download } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -48,10 +48,19 @@ export default async function BotDetailsPage({ params }: { params: Promise<{ id:
             </div>
           </div>
         </div>
-        <Link href={`/bots/${bot.id}/edit`} className={buttonVariants({ variant: "outline" })}>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </Link>
+        <div className="flex space-x-2">
+          <a
+            href={`/api/bots/${bot.id}/download?modules=ping,ban,kick,timeout,purge,warn,welcome,logging&template=${bot.template.toLowerCase()}`}
+            className={buttonVariants({ variant: "default" })}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download Source
+          </a>
+          <Link href={`/bots/${bot.id}/edit`} className={buttonVariants({ variant: "outline" })}>
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -139,6 +148,40 @@ export default async function BotDetailsPage({ params }: { params: Promise<{ id:
                   >
                     <span>{env.key}</span>
                     <span className="text-muted-foreground">••••••••</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Version History</CardTitle>
+            <CardDescription>Generated bot versions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {bot.versions.length === 0 ? (
+              <EmptyState
+                icon={Activity}
+                title="No versions generated"
+                description="Click Download Source to generate a bot."
+              />
+            ) : (
+              <div className="space-y-4">
+                {bot.versions.map((v) => (
+                  <div key={v.id} className="flex justify-between items-center p-3 border rounded">
+                    <div>
+                      <p className="font-medium">
+                        v{v.version} - {v.templateUsed}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(v.createdAt).toLocaleString()} • {v.modulesUsed.length} modules
+                      </p>
+                    </div>
+                    <Badge variant="outline">{v.status}</Badge>
                   </div>
                 ))}
               </div>
