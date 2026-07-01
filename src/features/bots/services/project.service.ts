@@ -6,7 +6,7 @@ export class ProjectService {
   static async createProject(userId: string, data: { name: string; description?: string | null }) {
     const baseSlug = slugify(data.name);
     const slug = await generateUniqueProjectSlug(baseSlug, userId);
-    
+
     return prisma.project.create({
       data: {
         userId,
@@ -63,7 +63,11 @@ export class ProjectService {
     });
   }
 
-  static async updateProject(userId: string, id: string, data: { name?: string; description?: string | null }) {
+  static async updateProject(
+    userId: string,
+    id: string,
+    data: { name?: string; description?: string | null }
+  ) {
     return prisma.project.update({
       where: { id, userId },
       data,
@@ -76,7 +80,7 @@ export class ProjectService {
         where: { id, userId },
         data: { deletedAt: new Date() },
       });
-      
+
       // Cascade soft delete to bots
       await tx.bot.updateMany({
         where: { projectId: id },
@@ -84,6 +88,30 @@ export class ProjectService {
       });
 
       return project;
+    });
+  }
+
+  static async duplicateProject(userId: string, id: string) {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const originalProject = await tx.project.findFirst({
+        where: { id, userId, deletedAt: null },
+      });
+      if (!originalProject) throw new Error("Project not found");
+
+      const newName = `${originalProject.name} (Copy)`;
+      const newSlug = await generateUniqueProjectSlug(slugify(newName), userId);
+
+      const duplicated = await tx.project.create({
+        data: {
+          userId,
+          name: newName,
+          slug: newSlug,
+          description: originalProject.description,
+          status: originalProject.status,
+        },
+      });
+
+      return duplicated;
     });
   }
 }

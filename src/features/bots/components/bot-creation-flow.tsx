@@ -4,16 +4,37 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { CreateBotSchema, CreateBotInput } from "@/features/bots/schemas/bot.schema";
 import { createBotAction } from "@/features/bots/actions/bots.actions";
 import { BOT_TEMPLATES } from "@/features/bots/constants";
 import { BotTemplate, BotLanguage } from "@prisma/client";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { Project } from "@prisma/client";
 
@@ -30,12 +51,12 @@ const STEPS = [
 
 export function BotCreationFlow({ projects }: BotCreationFlowProps) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState<number>(0);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
-    resolver: zodResolver(CreateBotSchema) as any,
+    resolver: zodResolver(CreateBotSchema),
     defaultValues: {
       projectId: projects.length === 1 ? projects[0].id : "",
       name: "",
@@ -43,7 +64,7 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
       template: BotTemplate.CUSTOM,
       language: BotLanguage.ENGLISH,
       prefix: "!",
-    },
+    } as z.infer<typeof CreateBotSchema>,
     mode: "onTouched",
   });
 
@@ -66,17 +87,20 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }
 
-  function onSubmit(data: CreateBotInput) {
+  function onSubmit(data: unknown) {
+    const parsed = CreateBotSchema.safeParse(data);
+    if (!parsed.success) return;
+    const validData = parsed.data;
     if (currentStep !== STEPS.length - 1) return;
-    
+
     setError(null);
     startTransition(async () => {
-      const res = await createBotAction(data);
-      if (res.success && res.data) {
-        router.push(`/bots/${res.data.id}`);
-      } else {
-        setError(res.error || "Failed to create bot.");
+      const res = await createBotAction(validData);
+      if (!res.success) {
+        setError(res.error || "Failed to create bot");
+        return;
       }
+      router.push(`/bots/${res.data.id}`);
     });
   }
 
@@ -84,13 +108,19 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
     <div className="flex items-center justify-center space-x-2 mb-8">
       {STEPS.map((step, index) => (
         <div key={step.id} className="flex items-center">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-            index <= currentStep ? "border-primary bg-primary text-primary-foreground" : "border-muted text-muted-foreground"
-          }`}>
+          <div
+            className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+              index <= currentStep
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-muted text-muted-foreground"
+            }`}
+          >
             {index + 1}
           </div>
           {index < STEPS.length - 1 && (
-            <div className={`w-12 h-1 mx-2 rounded ${index < currentStep ? "bg-primary" : "bg-muted"}`} />
+            <div
+              className={`w-12 h-1 mx-2 rounded ${index < currentStep ? "bg-primary" : "bg-muted"}`}
+            />
           )}
         </div>
       ))}
@@ -100,7 +130,7 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
   return (
     <div className="mx-auto max-w-3xl py-8">
       <StepIndicator />
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">{STEPS[currentStep].title}</CardTitle>
@@ -142,7 +172,9 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
                           </FormControl>
                           <SelectContent>
                             {projects.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -176,10 +208,10 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="What will this bot do?" 
-                            className="resize-none" 
-                            {...field} 
+                          <Textarea
+                            placeholder="What will this bot do?"
+                            className="resize-none"
+                            {...field}
                             value={field.value || ""}
                           />
                         </FormControl>
@@ -236,7 +268,9 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
                             </FormControl>
                             <SelectContent>
                               {Object.values(BotLanguage).map((lang) => (
-                                <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                                <SelectItem key={lang} value={lang}>
+                                  {lang}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -267,7 +301,7 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
                   <div className="grid grid-cols-3 gap-4 border-b pb-4">
                     <div className="text-muted-foreground">Project</div>
                     <div className="col-span-2 font-medium">
-                      {projects.find(p => p.id === values.projectId)?.name || "Unknown"}
+                      {projects.find((p) => p.id === values.projectId)?.name || "Unknown"}
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 border-b pb-4">
@@ -277,7 +311,7 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
                   <div className="grid grid-cols-3 gap-4 border-b pb-4">
                     <div className="text-muted-foreground">Template</div>
                     <div className="col-span-2 font-medium">
-                      {BOT_TEMPLATES.find(t => t.id === values.template)?.name || values.template}
+                      {BOT_TEMPLATES.find((t) => t.id === values.template)?.name || values.template}
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 pb-4">
@@ -289,21 +323,27 @@ export function BotCreationFlow({ projects }: BotCreationFlowProps) {
             </CardContent>
 
             <CardFooter className="flex justify-between border-t p-6">
-              <Button 
-                type="button" 
-                variant="ghost" 
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={currentStep === 0 ? () => router.back() : handleBack}
               >
-                {currentStep === 0 ? "Cancel" : (
+                {currentStep === 0 ? (
+                  "Cancel"
+                ) : (
                   <>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </>
                 )}
               </Button>
-              
+
               {currentStep < STEPS.length - 1 ? (
-                <Button type="button" onClick={handleNext} disabled={currentStep === 0 && projects.length === 0}>
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={currentStep === 0 && projects.length === 0}
+                >
                   Next
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

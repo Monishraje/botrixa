@@ -16,7 +16,7 @@ interface ConfirmDialogProps {
   title: string;
   description: string;
   onConfirm: () => void;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   confirmText?: string;
@@ -37,7 +37,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
+      {trigger && <AlertDialogTrigger render={trigger} />}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -51,7 +51,11 @@ export function ConfirmDialog({
               onConfirm();
               if (onOpenChange) onOpenChange(false);
             }}
-            className={destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            className={
+              destructive
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : ""
+            }
           >
             {confirmText}
           </AlertDialogAction>

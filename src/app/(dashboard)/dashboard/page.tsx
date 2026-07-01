@@ -6,7 +6,7 @@ import { QuickActions } from "@/features/dashboard/components/quick-actions";
 import { Bot, FolderDot, Activity, Server } from "lucide-react";
 import { Suspense } from "react";
 import { LoadingSkeleton } from "@/features/dashboard/components/loading-skeleton";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 

@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { BotService } from "@/features/bots/services/bot.service";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { ArrowLeft, Settings, Database, Activity, Code } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ export default async function BotDetailsPage({ params }: { params: Promise<{ id:
 
   const resolvedParams = await params;
   const bot = await BotService.getBotById(session.user.id, resolvedParams.id);
-  
+
   if (!bot) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -31,11 +31,9 @@ export default async function BotDetailsPage({ params }: { params: Promise<{ id:
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/bots">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
+          <Link href="/bots" className={buttonVariants({ variant: "ghost", size: "icon" })}>
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
           <div>
             <div className="flex items-center space-x-3">
               <h2 className="text-3xl font-bold tracking-tight">{bot.name}</h2>
@@ -50,10 +48,10 @@ export default async function BotDetailsPage({ params }: { params: Promise<{ id:
             </div>
           </div>
         </div>
-        <Button variant="outline">
+        <Link href={`/bots/${bot.id}/edit`} className={buttonVariants({ variant: "outline" })}>
           <Settings className="mr-2 h-4 w-4" />
           Settings
-        </Button>
+        </Link>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -94,18 +92,23 @@ export default async function BotDetailsPage({ params }: { params: Promise<{ id:
           </CardHeader>
           <CardContent>
             {bot.deployments.length === 0 ? (
-              <EmptyState 
-                icon={Activity} 
-                title="No deployments yet" 
-                description="Deploy your bot to start interacting with it on Discord." 
+              <EmptyState
+                icon={Activity}
+                title="No deployments yet"
+                description="Deploy your bot to start interacting with it on Discord."
               />
             ) : (
               <div className="space-y-4">
-                {bot.deployments.map(dep => (
-                  <div key={dep.id} className="flex justify-between items-center p-3 border rounded">
+                {bot.deployments.map((dep) => (
+                  <div
+                    key={dep.id}
+                    className="flex justify-between items-center p-3 border rounded"
+                  >
                     <div>
                       <p className="font-medium">{dep.provider}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(dep.createdAt).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(dep.createdAt).toLocaleString()}
+                      </p>
                     </div>
                     <Badge variant="outline">{dep.status}</Badge>
                   </div>
@@ -122,15 +125,18 @@ export default async function BotDetailsPage({ params }: { params: Promise<{ id:
           </CardHeader>
           <CardContent>
             {bot.envVars.length === 0 ? (
-              <EmptyState 
-                icon={Database} 
-                title="No variables defined" 
-                description="Add API keys and other secrets needed by your bot." 
+              <EmptyState
+                icon={Database}
+                title="No variables defined"
+                description="Add API keys and other secrets needed by your bot."
               />
             ) : (
               <div className="space-y-4">
-                {bot.envVars.map(env => (
-                  <div key={env.id} className="flex justify-between items-center p-3 border rounded font-mono text-sm">
+                {bot.envVars.map((env) => (
+                  <div
+                    key={env.id}
+                    className="flex justify-between items-center p-3 border rounded font-mono text-sm"
+                  >
                     <span>{env.key}</span>
                     <span className="text-muted-foreground">••••••••</span>
                   </div>

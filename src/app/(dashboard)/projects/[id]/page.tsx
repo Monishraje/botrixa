@@ -1,10 +1,10 @@
 import { ProjectService } from "@/features/bots/services/project.service";
+import { buttonVariants } from "@/components/ui/button";
 import { BotService } from "@/features/bots/services/bot.service";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -18,7 +18,7 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
 
   const resolvedParams = await params;
   const project = await ProjectService.getProjectById(session.user.id, resolvedParams.id);
-  
+
   if (!project) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -28,17 +28,18 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
   }
 
   // Fetch initial bots for this project
-  const botsResponse = await BotService.getBots(session.user.id, { projectId: project.id, limit: 10 });
+  const botsResponse = await BotService.getBots(session.user.id, {
+    projectId: project.id,
+    limit: 10,
+  });
   const bots = botsResponse.items;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/projects">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
+        <Link href="/projects" className={buttonVariants({ variant: "ghost", size: "icon" })}>
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
         <div className="flex-1">
           <div className="flex items-center space-x-3">
             <h2 className="text-3xl font-bold tracking-tight">{project.name}</h2>
@@ -46,14 +47,17 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
               {project.status.toLowerCase()}
             </Badge>
           </div>
-          <p className="text-muted-foreground">{project.description || "No description provided."}</p>
+          <p className="text-muted-foreground">
+            {project.description || "No description provided."}
+          </p>
         </div>
-        <Button asChild>
-          <Link href="/bots/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Bot
-          </Link>
-        </Button>
+        <Link
+          href={`/projects/${project.id}/edit`}
+          className={buttonVariants({ variant: "default" })}
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </Link>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -68,13 +72,16 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
       </div>
 
       <h3 className="text-xl font-bold mt-8 mb-4">Bots in Project</h3>
-      
+
       {bots.length === 0 ? (
         <div className="p-12 text-center rounded-xl border border-dashed bg-card/50">
           <p className="text-muted-foreground mb-4">No bots found in this project.</p>
-          <Button asChild variant="outline">
-            <Link href="/bots/new">Create Bot</Link>
-          </Button>
+          <Link
+            href={`/bots/new?projectId=${project.id}`}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Create Bot
+          </Link>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -88,9 +95,12 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
                 <CardDescription className="line-clamp-2">{bot.template}</CardDescription>
               </CardHeader>
               <CardContent className="pt-4 border-t">
-                <Button variant="ghost" className="w-full" asChild>
-                  <Link href={`/bots/${bot.id}`}>Manage Bot</Link>
-                </Button>
+                <Link
+                  href={`/bots/${bot.id}`}
+                  className={buttonVariants({ variant: "ghost", className: "w-full" })}
+                >
+                  Manage Bot
+                </Link>
               </CardContent>
             </Card>
           ))}

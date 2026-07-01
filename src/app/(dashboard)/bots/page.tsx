@@ -1,5 +1,5 @@
 import { BotsListClient } from "@/features/bots/components/bots-list-client";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -15,12 +15,10 @@ export default function BotsPage() {
           <h2 className="text-3xl font-bold tracking-tight">Bots</h2>
           <p className="text-muted-foreground">Manage and monitor all your AI Discord bots.</p>
         </div>
-        <Button asChild>
-          <Link href="/bots/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Bot
-          </Link>
-        </Button>
+        <Link href="/bots/new" className={buttonVariants({ variant: "default" })}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Bot
+        </Link>
       </div>
 
       <BotsListClient />
